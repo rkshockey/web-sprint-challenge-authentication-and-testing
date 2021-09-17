@@ -1,6 +1,8 @@
 const db = require('../data/dbConfig')
 const request = require('supertest')
 const server = require('./server')
+const tokenMaker = require('./auth/token-maker')
+const jokes = require('./jokes/jokes-data')
 
 beforeAll(async () => {
   await db.migrate.rollback();
@@ -140,5 +142,33 @@ describe('[POST] /api/auth/login', () => {
       .post('/api/auth/login')
       .send(badUser4)
     expect(res.body.message).toBe('invalid credentials')
+  })
+})
+
+describe('[GET] /api/jokes', () => {
+  const user = { id: 1, username: 'foo' }
+  const token = tokenMaker(user)
+  it('[15] responds with status 200 on proper token', async () => {
+    const res = await request(server)
+      .get('/api/jokes')
+      .set('Authorization', token)
+    expect(res.status).toBe(200)
+  })
+  it('[16] responds with jokes on proper token', async () => {
+    const res = await request(server)
+      .get('/api/jokes')
+      .set('Authorization', token)
+    expect(res.body).toMatchObject(jokes)
+  })
+  it('[17] responds with proper message on missing token', async () => {
+    const res = await request(server)
+      .get('/api/jokes')
+    expect(res.body.message).toBe('token required')
+  })
+  it('[18] responds with correct message on invalid token', async () => {
+    const res = await request(server)
+      .get('/api/jokes')
+      .set('Authorization', 'faketoken')
+    expect(res.body.message).toBe('token invalid')
   })
 })
