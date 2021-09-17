@@ -76,3 +76,69 @@ describe('[POST] /api/auth/register', () => {
     expect(actual).toHaveLength(3)
   })
 })
+
+describe('[POST] /api/auth/login', () => {
+  const user = { username: 'foo', password: 'foobar' }
+  const badUser1 = { username: 'foo' }
+  const badUser2 = { password: 'foobar' }
+  const badUser3 = { username: 'foo', password: 'bar' }
+  const badUser4 = { username: 'fizz', password: 'foobar'}
+  it('[8] responds with 200 on success', async () => {
+    const res = await request(server)
+      .post('/api/auth/login')
+      .send(user)
+    expect(res.status).toBe(200)
+  })
+  it('[9] responds with correct message on success', async () => {
+    const res = await request(server)
+      .post('/api/auth/login')
+      .send(user)
+    expect(res.body.message).toBe("welcome, foo")
+  })
+  it('[10] responds with a token on success', async () => {
+    const res = await request(server)
+      .post('/api/auth/login')
+      .send(user)
+    expect(res.body).toHaveProperty('token')
+  })
+  it('[11] responds with 400 on missing keys', async () => {
+    let res = await request(server)
+      .post('/api/auth/login')
+      .send(badUser1)
+    expect(res.status).toBe(400)
+    res = await request(server)
+      .post('/api/auth/login')
+      .send(badUser2)
+    expect(res.status).toBe(400)
+  })
+  it('[12] responds with proper message for missing keys', async() => {
+    let res = await request(server)
+      .post('/api/auth/login')
+      .send(badUser1)
+    expect(res.body.message).toBe('username and password required')
+    res = await request(server)
+      .post('/api/auth/login')
+      .send(badUser2)
+    expect(res.body.message).toBe('username and password required')
+  })
+  it('[13] responds with 401 on bad credentials', async () => {
+    let res = await request(server)
+      .post('/api/auth/login')
+      .send(badUser3)
+    expect(res.status).toBe(401)
+    res = await request(server)
+      .post('/api/auth/login')
+      .send(badUser4)
+    expect(res.status).toBe(401)
+  })
+  it('[14] responds with proper message for bad credentials', async() => {
+    let res = await request(server)
+      .post('/api/auth/login')
+      .send(badUser3)
+    expect(res.body.message).toBe('invalid credentials')
+    res = await request(server)
+      .post('/api/auth/login')
+      .send(badUser4)
+    expect(res.body.message).toBe('invalid credentials')
+  })
+})
