@@ -7,10 +7,14 @@ const User = require('./auth-model')
 const tokenMaker = require('./token-maker')
 
 router.post('/register', validateUser, userUnique, async (req, res, next) => {
-  const {username, password} = req.body;
-  const hash = bcrypt.hashSync(password, 8)
-  const user = await User.add({ username, password: hash })
-  res.status(201).json(user)
+  try {
+    const {username, password} = req.body;
+    const hash = bcrypt.hashSync(password, 8)
+    const user = await User.add({ username, password: hash })
+    res.status(201).json(user)
+  } catch (err) {
+    next(err)
+  }
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
